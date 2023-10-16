@@ -85,7 +85,7 @@ object adt {
 
     /** Реализовать экземпляр типа IntOrString с помощью конструктора Right
       */
-    val intOrString = Either[Int, String]
+   // val intOrString = Either[Int, String]
 
 
     type CreditCard
