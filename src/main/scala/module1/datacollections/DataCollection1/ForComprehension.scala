@@ -67,20 +67,8 @@ object ForComprehension{
       (car.marke, car.model, garage.index)
     }
 
-
-
     cars1.foreach{
       case (a,b,c) => println(s"$a $b $c")
     }
-
-
-
-
-
-
-
-
   }
-
-
 }
