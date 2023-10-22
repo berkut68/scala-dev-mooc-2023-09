@@ -16,9 +16,14 @@ object task_collections {
    *
    * **/
   def capitalizeIgnoringASCII(text: List[String]): List[String] = {
-    List.empty
-  }
+    val changeElement: PartialFunction[(String, Int), String] = new PartialFunction[(String, Int), String] {
+      override def isDefinedAt(x: (String, Int)): Boolean = x._2 != 0
 
+      override def apply(v1: (String, Int)): String = if (isASCIIString(v1._1)) v1._1.toUpperCase() else v1._1.toLowerCase()
+    }
+
+    List(text.head) ++ text.zipWithIndex.collect(changeElement)
+  }
   /**
    *
    * Компьютер сгенерировал текст используя вместо прописных чисел, числа в виде цифр, помогите компьютеру заменить цифры на числа
@@ -29,7 +34,11 @@ object task_collections {
    * HINT: Для всех возможных комбинаций чисел стоит использовать Map
    * **/
   def numbersToNumericString(text: String): String = {
-    ""
+    val dictionary =
+      Map("0" -> "zero", "1" -> "one", "2" -> "two", "3" -> "thee", "4" -> "four"
+        , "5" -> "five", "6" -> "six", "7" -> "seven", "8" -> "eight", "9" -> "nine")
+
+    text.split(" ").map(x => dictionary.getOrElse(x, x)).mkString(" ")
   }
 
   /**
@@ -47,7 +56,16 @@ object task_collections {
    * Реализуйте метод который примет две коллекции (два источника) и вернёт объединенный список уникальный значений
    **/
   def intersectionAuto(dealerOne: Iterable[Auto], dealerTwo: Iterable[Auto]): Iterable[Auto] = {
-    Iterable.empty
+    val result =
+      for (
+        car1 <- dealerOne;
+        car2 <- dealerTwo;
+        if car1 != car2
+      ) yield {
+        Vector(car1, car2)
+      }
+
+    result.flatten.toSet
   }
 
   /**
@@ -55,7 +73,32 @@ object task_collections {
    * Реализуйте метод который примет две коллекции (два источника)
    * и вернёт уникальный список машин обслуживающихся в первом дилерском центре и не обслуживающимся во втором
    **/
-  def filterAllLeftDealerAutoWithoutRight(dealerOne: Iterable[Auto], dealerTwo: Iterable[Auto]): Iterable[Auto] = {
-    Iterable.empty
+  def filterAllLeftDealerAutoWithoutRight(dealerOne: Seq[Auto], dealerTwo: Seq[Auto]): Iterable[Auto] = {
+    val result =
+      for (
+        car1 <- dealerOne;
+        car2 <- dealerTwo
+        if !dealerTwo.contains(car1)
+      ) yield {
+        (car1, car2)
+      }
+
+    result.map(x => x._1).toSet
+  }
+
+  def main(args: Array[String]): Unit = {
+    val dealerOne = Vector(Auto("BMW", "i3"), Auto("Mazda", "X5"))
+    val dealerTwo = Seq(Auto("BMW", "i3"), Auto("Mazda", "X5"))
+
+    val result =
+      for (
+        car1 <- dealerOne;
+        car2 <- dealerTwo
+        if !dealerTwo.contains(car1)
+      ) yield {
+        (car1, car2)
+      }
+    //println(result)
+    println(result.map(x => x._1).toSet)
   }
 }
