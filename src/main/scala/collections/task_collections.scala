@@ -86,19 +86,4 @@ object task_collections {
     result.map(x => x._1).toSet
   }
 
-  def main(args: Array[String]): Unit = {
-    val dealerOne = Vector(Auto("BMW", "i3"), Auto("Mazda", "X5"))
-    val dealerTwo = Seq(Auto("BMW", "i3"), Auto("Mazda", "X5"))
-
-    val result =
-      for (
-        car1 <- dealerOne;
-        car2 <- dealerTwo
-        if !dealerTwo.contains(car1)
-      ) yield {
-        (car1, car2)
-      }
-    //println(result)
-    println(result.map(x => x._1).toSet)
-  }
 }
