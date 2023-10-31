@@ -1,5 +1,6 @@
 import module1.threads.{Foo, Thread1, ToyFuture, getRatesLocation1, getRatesLocation2, getRatesLocation3, getRatesLocation4, getRatesLocation5, getRatesLocation6, getRatesLocation7, getRatesLocation8, printRunningTime}
 import module1.{future, promise, try_}
+import module2.implicits
 
 import scala.concurrent.{Await, Future, TimeoutException}
 import scala.concurrent.duration.DurationInt
@@ -57,13 +58,13 @@ object Main {
 //    val r = Await.result(future.f9, 3.second)
 //    println(r)
 
-    println(promise.p1.isCompleted)
-    println(promise.f1.isCompleted)
-    promise.p1.failure(new Exception("ooops"))
-    println(promise.p1.isCompleted)
-    println(promise.f1.isCompleted)
-    println(Await.result(promise.f1.recover{case _ => 0}(scala.concurrent.ExecutionContext.global), 3.second))
+//    println(promise.p1.isCompleted)
+//    println(promise.f1.isCompleted)
+//    promise.p1.failure(new Exception("ooops"))
+//    println(promise.p1.isCompleted)
+//    println(promise.f1.isCompleted)
+//    println(Await.result(promise.f1.recover{case _ => 0}(scala.concurrent.ExecutionContext.global), 3.second))
 
-   // Thread.sleep(4000)
+    implicits.implicit_scopes.result
   }
 }
