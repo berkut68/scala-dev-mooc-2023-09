@@ -1,6 +1,6 @@
 package module3
 
-import zio.{Has, Task, ULayer, ZIO, ZLayer}
+import zio.{Has, IO, Task, ULayer, ZIO, ZLayer}
 import zio.clock.{Clock, sleep}
 import zio.console._
 import zio.duration.durationInt
@@ -18,14 +18,42 @@ package object zio_homework {
    * Используя сервисы Random и Console, напишите консольную ZIO программу которая будет предлагать пользователю угадать число от 1 до 3
    * и печатать в консоль угадал или нет. Подумайте, на какие наиболее простые эффекты ее можно декомпозировать.
    */
+  lazy val guessProgram = {
+    def readNumberFromConsole(console: Console.Service): Task[Int] = {1
+      lazy val readLine: IO[IOException, String] = console.getStrLn
+      lazy val readInt: Task[Int] = readLine.flatMap(str => ZIO.effect(str.toInt))
+      lazy val readIntOrRetry: Task[Int] = readInt.orElse {
+        ZIO.effect(println("Некорректный ввод, попробуйте снова")).zipRight(readIntOrRetry)
+      }
+
+      console.putStrLn("Введите число от 1 до 3 включительно: ") *> readIntOrRetry
+    }
+
+    def checkUsersNumber(usersNumber: Int, console: Console.Service): ZIO[Any, Throwable, Int] = {
+      lazy val checkUsersNumber = if (usersNumber > 3 || usersNumber < 1) {
+        console.putStrLn("Число должно быть от 1 до 3 включительно") *>
+          ZIO.fail(new Throwable("Error"))
+      } else ZIO.succeed(usersNumber)
+
+      checkUsersNumber
+    }
+
+    for {
+      console: Console.Service <- ZIO.environment[Console].map(_.get)
+      random <- ZIO.environment[Random].map(_.get)
+      numberToGuess <- random.nextIntBetween(1, 4)
+      _ <- console.putStrLn("Задуманное число: " + numberToGuess.toString)
+      usersNumber <- readNumberFromConsole(console)
+      usersNumberProcessed <- checkUsersNumber(usersNumber, console)
+      _ <- console.putStr(if (usersNumberProcessed == numberToGuess) "Верно! Вы угадали загаданное число" else s"Неверно! Загаданное число: ${numberToGuess}\n")
+    } yield ()
 
 
-
-  lazy val guessProgram = ???
+  }
 
   /**
    * 2. реализовать функцию doWhile (общего назначения), которая будет выполнять эффект до тех пор, пока его значение в условии не даст true
-   * 
+   *
    */
 
   def doWhile = ???
@@ -37,7 +65,13 @@ package object zio_homework {
    */
 
 
-  def loadConfigOrDefault = ???
+  def loadConfigOrDefault: ZIO[Any, Throwable, config.AppConfig] = for {
+    c <- config.load.foldM(
+      _ => ZIO.succeed(config.AppConfig("127.0.0.1", "8080")),
+      success => ZIO.succeed(success)
+    )
+    _ <- ZIO.effect(println(c.host, c.port))
+  } yield c
 
 
   /**
@@ -58,7 +92,7 @@ package object zio_homework {
    */
   lazy val effects = ???
 
-  
+
   /**
    * 4.3 Напишите программу которая вычислит сумму элементов коллекции "effects",
    * напечатает ее в консоль и вернет результат, а также залогирует затраченное время на выполнение,
@@ -81,19 +115,19 @@ package object zio_homework {
    */
 
 
-   /**
-     * 6.
-     * Воспользуйтесь написанным сервисом, чтобы созадть эффект, который будет логировать время выполнения прогаммы из пункта 4.3
-     *
-     * 
-     */
+  /**
+   * 6.
+   * Воспользуйтесь написанным сервисом, чтобы созадть эффект, который будет логировать время выполнения прогаммы из пункта 4.3
+   *
+   *
+   */
 
   lazy val appWithTimeLogg = ???
 
   /**
-    * 
-    * Подготовьте его к запуску и затем запустите воспользовавшись ZioHomeWorkApp
-    */
+   *
+   * Подготовьте его к запуску и затем запустите воспользовавшись ZioHomeWorkApp
+   */
 
   lazy val runApp = ???
 
