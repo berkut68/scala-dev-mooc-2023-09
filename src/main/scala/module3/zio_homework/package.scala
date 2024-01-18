@@ -1,6 +1,5 @@
 package module3
 
-
 import zio.{ExitCode, Has, IO, Task, UIO, ULayer, URIO, ZIO, ZLayer, clock, random}
 import zio.clock.Clock
 import zio.console._
@@ -104,7 +103,9 @@ package object zio_homework {
   lazy val zero: Task[Int] = ZIO.effect(0)
 
   lazy val sumEffects: ZIO[Random with Clock, Throwable, Task[Int]] =
-    ZIO.foldLeft(effects)(zero)((z, i) => z.flatMap(z1 => i.map(i1 => ZIO.effect(z1 + i1))))
+    ZIO.foldLeft(effects)(zero) {
+      (z, i) => z.flatMap(z1 => i.map(i1 => ZIO.effect(z1 + i1)))
+    }
 
   lazy val sumAll: ZIO[Random with Clock, Throwable, Int] = sumEffects.flatMap(a => a.map(b => b))
 
