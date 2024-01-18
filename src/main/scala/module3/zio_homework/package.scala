@@ -1,15 +1,15 @@
 package module3
 
-import zio.{Has, IO, Task, ULayer, ZIO, ZLayer}
-import zio.clock.{Clock, sleep}
+
+import zio.{IO, Task, UIO, ULayer, URIO, ZIO, clock, random}
+import zio.clock.Clock
 import zio.console._
-import zio.duration.durationInt
-import zio.macros.accessible
-import zio.random._
+import zio.random.{Random, _}
+
+import zio.duration._
 
 import java.io.IOException
 import java.util.concurrent.TimeUnit
-import scala.io.StdIn
 import scala.language.postfixOps
 
 package object zio_homework {
@@ -47,8 +47,6 @@ package object zio_homework {
       usersNumberProcessed <- checkUsersNumber(usersNumber, console)
       _ <- console.putStr(if (usersNumberProcessed == numberToGuess) "Верно! Вы угадали загаданное число" else s"Неверно! Загаданное число: ${numberToGuess}\n")
     } yield ()
-
-
   }
 
   /**
@@ -56,7 +54,11 @@ package object zio_homework {
    *
    */
 
-  def doWhile = ???
+  def doWhile: Task[Boolean] => Task[Unit] =
+    (effect: Task[Boolean]) => for {
+      value <- effect
+      _ <- if (value) ZIO.succeed() else doWhile(effect)
+    } yield ()
 
   /**
    * 3. Реализовать метод, который безопасно прочитает конфиг из файла, а в случае ошибки вернет дефолтный конфиг
@@ -85,12 +87,13 @@ package object zio_homework {
    * 4.1 Создайте эффект, который будет возвращать случайеым образом выбранное число от 0 до 10 спустя 1 секунду
    * Используйте сервис zio Random
    */
-  lazy val eff = ???
+  lazy val eff: ZIO[Random with Clock, Nothing, Int] = ZIO.sleep(1 seconds) zipRight random.nextIntBetween(0, 10)
+
 
   /**
    * 4.2 Создайте коллукцию из 10 выше описанных эффектов (eff)
    */
-  lazy val effects = ???
+  lazy val effects: List[ZIO[Random with Clock, Nothing, Int]] = List.fill(10)(eff)
 
 
   /**
@@ -99,14 +102,38 @@ package object zio_homework {
    * можно использовать ф-цию printEffectRunningTime, которую мы разработали на занятиях
    */
 
-  lazy val app = ???
+  lazy val zero: Task[Int] = ZIO.effect(0)
+
+  lazy val sumEffects: ZIO[Random with Clock, Throwable, Task[Int]] =
+    ZIO.foldLeft(effects)(zero)((z, i) => z.flatMap(z1 => i.map(i1 => ZIO.effect(z1 + i1))))
+
+  lazy val sumAll: ZIO[Random with Clock, Throwable, Int] = sumEffects.flatMap(a => a.map(b => b))
+
+  lazy val result = sumAll.flatMap(e => putStrLn(s"Sum of all elements in list: ${e.toString}"))
+
+  lazy val currTime: URIO[Clock, Long] = clock.currentTime(TimeUnit.SECONDS)
+
+  def printEffectRunningTime[R, E, A](zio: ZIO[R, E, A]): ZIO[R with Clock with Console, E, A] = for {
+    start <- currTime
+    r <- zio
+    end <- currTime
+    _ <- putStrLn(s"Running time: ${end - start}")
+  } yield r
+
+  lazy val app = printEffectRunningTime(result)
 
 
   /**
    * 4.4 Усовершенствуйте программу 4.3 так, чтобы минимизировать время ее выполнения
    */
 
-  lazy val appSpeedUp = ???
+  lazy val collPar: ZIO[Random with Clock, Nothing, List[Int]] = ZIO.collectAllPar(effects)
+
+  lazy val sum2: ZIO[Random with Clock, Throwable, Int] = collPar.flatMap(a => ZIO.effect(a.sum))
+
+  lazy val result2 = sum2.flatMap(a => putStrLn(s"Sum of all elements in list: ${a.toString}"))
+
+  lazy val appSpeedUp = printEffectRunningTime(result2)
 
 
   /**
