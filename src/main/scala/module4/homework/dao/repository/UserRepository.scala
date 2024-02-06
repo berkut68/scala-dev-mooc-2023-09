@@ -12,21 +12,23 @@ import module4.phoneBook.db
 import java.sql.SQLException
 import javax.sql.DataSource
 
-object UserRepository{
+object UserRepository {
 
     val dc = db.Ctx
     import dc._
 
     type UserRepository = Has[Service]
 
-    trait Service{
+    trait Service {
         def findUser(userId: UserId): QIO[Option[User]]
         def createUser(user: User): QIO[User]
+        def createRole(role: Role): QIO[Role]
         def createUsers(users: List[User]): QIO[List[User]]
         def updateUser(user: User): QIO[Unit]
         def deleteUser(user: User): QIO[Unit]
         def findByLastName(lastName: String): QIO[List[User]]
         def list(): QIO[List[User]]
+        def listRoles(): QIO[List[Role]]
         def userRoles(userId: UserId): QIO[List[Role]]
         def insertRoleToUser(roleCode: RoleCode, userId: UserId): QIO[Unit]
         def listUsersWithRole(roleCode: RoleCode): QIO[List[User]]
@@ -43,9 +45,7 @@ object UserRepository{
             querySchema[Role](""""Role"""")
         }
 
-        lazy val userToRoleSchema = quote {
-            querySchema[UserToRole](""""UserToRole"""")
-        }
+        lazy val userToRoleSchema = quote { querySchema[UserToRole](""""UserToRole"""") }
 
         def findUser(userId: UserId): Result[Option[User]] = run(userSchema.filter(_.id == lift(userId.id)))
           .map(_.headOption)
