@@ -1,13 +1,15 @@
 package module4.homework.dao.entity
 
-case class Role(code: String, name: String)
+case class Role(code: String, name: String) {
+    def typedCode: RoleCode = RoleCode(code)
+}
 
 case class User(
-    id: String,
-    firstName: String,
-    lastName: String,
-    age: Int
-){
+                 id: String,
+                 firstName: String,
+                 lastName: String,
+                 age: Int
+               ){
     def typedId: UserId = UserId(id)
 }
 
